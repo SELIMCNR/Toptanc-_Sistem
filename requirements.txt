@@ -4,3 +4,4 @@ pygame
 requests
 reportlab
 openpyxl
+apscheduler
