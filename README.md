@@ -1,4 +1,4 @@
-Tabii Selim! Aşağıda “Toptanc-_Sistem” adlı projen için sade, profesyonel ve işlevsel bir `README.md` taslağı hazırladım. Bu dosya hem GitHub’da hem Render gibi deploy platformlarında net bir tanıtım sağlar:
+
 
 ---
 
