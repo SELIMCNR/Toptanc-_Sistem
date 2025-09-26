@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ürün Listesi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding-top: 40px;
+      }
+      .table th,
+      .table td {
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="text-center mb-4">📦 Ürün Listesi</h2>
+
+      <!-- Yeni Ürün Ekle Butonu -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="/urun-ekle" class="btn btn-success">➕ Yeni Ürün Ekle</a>
+        <input
+          type="text"
+          id="aramaKutusu"
+          class="form-control w-50"
+          placeholder="🔍 Ürün adı veya toptancı ara..."
+        />
+      </div>
+
+      <!-- Ürün Tablosu -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Ürün Adı</th>
+              <th>Fiyat</th>
+              <th>Adet</th>
+              <th>Toptancı</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for id, ad, fiyat, adet, toptanci in urunler %}
+            <tr>
+              <td>{{ id }}</td>
+              <td>{{ ad }}</td>
+              <td>{{ "%.2f"|format(fiyat) }} ₺</td>
+              <td>{{ adet }}</td>
+              <td>{{ toptanci }}</td>
+              <td>
+                <a href="/urun-duzenle/{{ id }}" class="btn btn-sm btn-info"
+                  >✏️ Düzenle</a
+                >
+                <a
+                  href="/urun-sil/{{ id }}"
+                  class="btn btn-sm btn-danger"
+                  onclick="return confirm('Silmek istediğine emin misin?')"
+                  >🗑️ Sil</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Alt Bağlantılar -->
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <a href="/admin" class="btn btn-outline-secondary"
+          >← Admin Paneline Dön</a
+        >
+        <button id="koyuModBtn" class="btn btn-outline-dark btn-sm">
+          🌙 Koyu Mod
+        </button>
+      </div>
+
+      <!-- Canlı Saat -->
+      <div id="saatDiv" class="text-center text-muted mt-3"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+      // 1. Tablo filtreleme
+      const aramaKutusu = document.getElementById("aramaKutusu");
+      aramaKutusu.addEventListener("input", () => {
+        const filtre = aramaKutusu.value.toLowerCase();
+        document.querySelectorAll("tbody tr").forEach((satir) => {
+          const metin = satir.textContent.toLowerCase();
+          satir.style.display = metin.includes(filtre) ? "" : "none";
+        });
+      });
+
+      // 2. İşlem butonlarına animasyon
+      document.querySelectorAll("a.btn-info, a.btn-danger").forEach((buton) => {
+        buton.addEventListener("click", () => {
+          buton.textContent = "⏳ İşleniyor...";
+        });
+      });
+
+      // 3. Koyu mod geçişi
+      const koyuModBtn = document.getElementById("koyuModBtn");
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+        document.querySelectorAll("table").forEach((tbl) => {
+          tbl.classList.toggle("table-dark");
+        });
+      });
+
+      // 4. Canlı saat
+      const saatDiv = document.getElementById("saatDiv");
+      function saatGuncelle() {
+        const simdi = new Date();
+        saatDiv.textContent = "📅 " + simdi.toLocaleString("tr-TR");
+      }
+      setInterval(saatGuncelle, 1000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kullanıcı Listesi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding-top: 60px;
+      }
+      .table-responsive {
+        margin-top: 20px;
+      }
+      .btn-sm {
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="text-center mb-4">👥 Kullanıcı Listesi</h2>
+
+      <!-- Arama Kutusu -->
+      <input
+        type="text"
+        id="arama"
+        class="form-control mb-3"
+        placeholder="🔍 Kullanıcı ara..."
+      />
+
+      <!-- Tablo -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Kullanıcı Adı</th>
+              <th>Yetki</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for id, ad, yetki in kullanicilar %}
+            <tr>
+              <td>{{ id }}</td>
+              <td>{{ ad }}</td>
+              <td>{{ yetki }}</td>
+              <td>
+                <a href="/sifre-sifirla/{{ id }}" class="btn btn-sm btn-warning"
+                  >🔁 Şifre Sıfırla</a
+                >
+                <a href="/yetki-degistir/{{ id }}" class="btn btn-sm btn-info"
+                  >⚙️ Yetki Değiştir</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="/admin" class="btn btn-outline-secondary"
+          >← Admin Paneline Dön</a
+        >
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript: Arama ve Koyu Mod -->
+    <script>
+      // Tablo filtreleme
+      document.getElementById("arama").addEventListener("input", function () {
+        const filtre = this.value.toLowerCase();
+        document.querySelectorAll("tbody tr").forEach((satir) => {
+          const metin = satir.textContent.toLowerCase();
+          satir.style.display = metin.includes(filtre) ? "" : "none";
+        });
+      });
+
+      // Koyu mod geçişi (isteğe bağlı)
+      const koyuModBtn = document.createElement("button");
+      koyuModBtn.textContent = "🌙 Koyu Mod";
+      koyuModBtn.className = "btn btn-outline-dark btn-sm d-block mx-auto mt-3";
+      document.body.appendChild(koyuModBtn);
+
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+      });
+    </script>
+    <script>
+      // 2. İşlem butonlarına animasyon
+      document.querySelectorAll("a.btn").forEach((buton) => {
+        buton.addEventListener("click", () => {
+          buton.textContent = "⏳ İşleniyor...";
+          setTimeout(() => {
+            buton.textContent = buton.classList.contains("btn-warning")
+              ? "🔁 Şifre Sıfırla"
+              : "⚙️ Yetki Değiştir";
+          }, 2000);
+        });
+      });
+
+      // 4. Canlı saat
+      const saatDiv = document.createElement("div");
+      saatDiv.className = "text-center text-muted mt-3";
+      document.body.appendChild(saatDiv);
+
+      function saatGuncelle() {
+        const simdi = new Date();
+        saatDiv.textContent = "📅 " + simdi.toLocaleString("tr-TR");
+      }
+      setInterval(saatGuncelle, 1000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ toptanci }} - Ürün Bazlı Borç Detayı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding-top: 60px;
+      }
+      .table-responsive {
+        margin-top: 20px;
+      }
+      .btn-sm {
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="text-center mb-4">{{ toptanci }} - Ürün Bazlı Borç Detayı</h2>
+
+      <!-- Tarih Filtre Formu -->
+      <form method="POST" class="row g-3 mb-3">
+        <div class="col-md-5">
+          <label for="baslangic" class="form-label">Başlangıç Tarihi</label>
+          <input
+            type="date"
+            name="baslangic"
+            id="baslangic"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-5">
+          <label for="bitis" class="form-label">Bitiş Tarihi</label>
+          <input
+            type="date"
+            name="bitis"
+            id="bitis"
+            class="form-control"
+            required
+          />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">
+            🔍 Filtrele
+          </button>
+        </div>
+      </form>
+
+      <!-- PDF Butonu -->
+      <div class="mb-3 text-end">
+        <a
+          href="/rapor-detay-pdf/{{ toptanci_id }}"
+          id="pdfBtn"
+          class="btn btn-outline-secondary"
+        >
+          📄 PDF olarak indir
+        </a>
+      </div>
+
+      <!-- Tablo -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Ürün</th>
+              <th>Fiyat (₺)</th>
+              <th>Adet</th>
+              <th>Borç (₺)</th>
+              <th>Ödeme (₺)</th>
+              <th>Kalan (₺)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for urun, fiyat, adet, borc, odeme, kalan in detaylar %}
+            <tr>
+              <td>{{ urun }}</td>
+              <td>{{ "%.2f"|format(fiyat) }}</td>
+              <td>{{ adet }}</td>
+              <td>{{ "%.2f"|format(borc) }}</td>
+              <td>{{ "%.2f"|format(odeme) }}</td>
+              <td>{{ "%.2f"|format(kalan) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="/rapor" class="btn btn-outline-secondary">← Geri Dön</a>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // 1. Tarih doğrulama
+      const baslangic = document.getElementById("baslangic");
+      const bitis = document.getElementById("bitis");
+
+      document.querySelector("form").addEventListener("submit", (e) => {
+        if (baslangic.value > bitis.value) {
+          e.preventDefault();
+          alert("Başlangıç tarihi, bitiş tarihinden büyük olamaz.");
+        }
+      });
+
+      // 2. PDF butonu animasyonu
+      const pdfBtn = document.getElementById("pdfBtn");
+      pdfBtn?.addEventListener("click", () => {
+        pdfBtn.textContent = "⏳ PDF hazırlanıyor...";
+        setTimeout(() => {
+          pdfBtn.textContent = "📄 PDF olarak indir";
+        }, 3000);
+      });
+
+      // 3. Tablo filtreleme (ürün adına göre)
+      const aramaKutusu = document.createElement("input");
+      aramaKutusu.placeholder = "🔍 Ürün ara...";
+      aramaKutusu.className = "form-control my-3";
+      document.querySelector(".table-responsive")?.prepend(aramaKutusu);
+
+      aramaKutusu.addEventListener("input", () => {
+        const filtre = aramaKutusu.value.toLowerCase();
+        document.querySelectorAll("tbody tr").forEach((satir) => {
+          const urunAdi = satir.querySelector("td")?.textContent.toLowerCase();
+          satir.style.display = urunAdi.includes(filtre) ? "" : "none";
+        });
+      });
+
+      // 4. Koyu mod geçişi
+      const koyuModBtn = document.createElement("button");
+      koyuModBtn.textContent = "🌙 Koyu Mod";
+      koyuModBtn.className = "btn btn-outline-dark btn-sm d-block mx-auto mt-3";
+      document.body.appendChild(koyuModBtn);
+
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+      });
+
+      // 5. Canlı saat
+      const saatDiv = document.createElement("div");
+      saatDiv.className = "text-center text-muted mt-3";
+      document.body.appendChild(saatDiv);
+
+      function saatGuncelle() {
+        const simdi = new Date();
+        saatDiv.textContent = "📅 " + simdi.toLocaleString("tr-TR");
+      }
+      setInterval(saatGuncelle, 1000);
+    </script>
+  </body>
+</html>

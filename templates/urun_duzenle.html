@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ürün Düzenle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .form-kutu {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-kutu">
+      <h2 class="text-center mb-4">🛠️ Ürün Düzenle</h2>
+
+      <form method="POST" id="urunForm">
+        <div class="mb-3">
+          <label for="ad" class="form-label">Ürün Adı</label>
+          <input
+            type="text"
+            class="form-control"
+            name="ad"
+            id="ad"
+            value="{{ urun[0] }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="fiyat" class="form-label">Fiyat (₺)</label>
+          <input
+            type="number"
+            step="0.01"
+            class="form-control"
+            name="fiyat"
+            id="fiyat"
+            value="{{ urun[1] }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="adet" class="form-label">Adet</label>
+          <input
+            type="number"
+            class="form-control"
+            name="adet"
+            id="adet"
+            value="{{ urun[2] }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="toptanci_id" class="form-label">Toptancı</label>
+          <select class="form-select" name="toptanci_id" id="toptanci_id" required>
+            {% for tid, tad in toptancilar %}
+              <option value="{{ tid }}" {% if tid == urun[3] %}selected{% endif %}>{{ tad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">💾 Kaydet</button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="/urun-listesi" class="text-decoration-none">← Ürün Listesine Dön</a>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+      // Form doğrulama ve animasyon
+      const form = document.getElementById("urunForm");
+      const adInput = document.getElementById("ad");
+      const fiyatInput = document.getElementById("fiyat");
+      const adetInput = document.getElementById("adet");
+      const kaydetBtn = form.querySelector("button[type='submit']");
+
+      form.addEventListener("submit", (e) => {
+        const ad = adInput.value.trim();
+        const fiyat = parseFloat(fiyatInput.value);
+        const adet = parseInt(adetInput.value);
+
+        if (!ad || isNaN(fiyat) || isNaN(adet)) {
+          e.preventDefault();
+          alert("Lütfen tüm alanları geçerli şekilde doldurun.");
+          return;
+        }
+
+        if (fiyat <= 0 || adet < 0) {
+          e.preventDefault();
+          alert("Fiyat pozitif, adet sıfır veya daha büyük olmalıdır.");
+          return;
+        }
+
+        kaydetBtn.disabled = true;
+        kaydetBtn.textContent = "⏳ Kaydediliyor...";
+      });
+
+      // Koyu mod geçişi
+      const koyuModBtn = document.createElement("button");
+      koyuModBtn.textContent = "🌙 Koyu Mod";
+      koyuModBtn.className = "btn btn-outline-dark btn-sm d-block mx-auto mt-3";
+      document.body.appendChild(koyuModBtn);
+
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+      });
+
+      // Canlı saat
+      const saatDiv = document.createElement("div");
+      saatDiv.className = "text-center text-muted mt-3";
+      document.body.appendChild(saatDiv);
+
+      function saatGuncelle() {
+        const simdi = new Date();
+        saatDiv.textContent = "📅 " + simdi.toLocaleString("tr-TR");
+      }
+      setInterval(saatGuncelle, 1000);
+    </script>
+  </body>
+</html>

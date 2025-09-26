@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ödeme Ekle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding-top: 60px;
+      }
+      .form-kutu {
+        max-width: 600px;
+        margin: auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .urun-grup {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-kutu">
+      <h2 class="text-center mb-4">💰 Ödeme Ekle</h2>
+
+      <form method="POST" id="odemeForm">
+        <div class="mb-3">
+          <label for="toptanci_id" class="form-label">Toptancı</label>
+          <select
+            class="form-select"
+            name="toptanci_id"
+            id="toptanci_id"
+            required
+          >
+            {% for id, ad in toptancilar %}
+            <option value="{{ id }}">{{ ad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="tarih" class="form-label">Tarih</label>
+          <input
+            type="date"
+            class="form-control"
+            name="tarih"
+            id="tarih"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="tutar" class="form-label">Tutar (₺)</label>
+          <input
+            type="number"
+            step="0.01"
+            class="form-control"
+            name="tutar"
+            id="tutar"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="odeme_yontemi" class="form-label">Ödeme Yöntemi</label>
+          <input
+            type="text"
+            class="form-control"
+            name="odeme_yontemi"
+            id="odeme_yontemi"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Ürünler</label>
+          {% for id, ad in urunler %}
+          <div class="urun-grup">
+            <input type="checkbox" id="urun_{{ id }}" name="urun_{{ id }}" />
+            <label for="urun_{{ id }}" class="form-check-label me-auto"
+              >{{ ad }}</label
+            >
+            <input
+              type="number"
+              name="adet_{{ id }}"
+              placeholder="Adet"
+              min="0"
+              class="form-control"
+              style="max-width: 100px"
+            />
+          </div>
+          {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">💾 Kaydet</button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="/odeme-listesi" class="text-decoration-none"
+          >← Ödeme Listesine Dön</a
+        >
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+      const form = document.getElementById("odemeForm");
+      const kaydetBtn = form.querySelector("button[type='submit']");
+
+      form.addEventListener("submit", (e) => {
+        const tarih = document.getElementById("tarih").value;
+        const tutar = parseFloat(document.getElementById("tutar").value);
+        const yontem = document.getElementById("odeme_yontemi").value.trim();
+        const toptanci = document.getElementById("toptanci_id").value;
+
+        if (!tarih || isNaN(tutar) || !yontem || !toptanci) {
+          e.preventDefault();
+          alert("Lütfen tüm alanları geçerli şekilde doldurun.");
+          return;
+        }
+
+        let urunSecildi = false;
+        document.querySelectorAll(".urun-grup").forEach((grup) => {
+          const checkbox = grup.querySelector("input[type='checkbox']");
+          const adetInput = grup.querySelector("input[type='number']");
+
+          if (checkbox.checked) {
+            urunSecildi = true;
+            const adet = parseInt(adetInput.value);
+            if (!adet || adet <= 0) {
+              e.preventDefault();
+              alert(
+                `Seçilen ürün için geçerli bir adet girin: ${grup
+                  .querySelector("label")
+                  .textContent.trim()}`
+              );
+            }
+          }
+        });
+
+        if (!urunSecildi) {
+          e.preventDefault();
+          alert("En az bir ürün seçmelisiniz.");
+          return;
+        }
+
+        kaydetBtn.disabled = true;
+        kaydetBtn.textContent = "⏳ Kaydediliyor...";
+      });
+
+      // Tarih alanını bugünün tarihiyle doldur
+      const tarihInput = document.getElementById("tarih");
+      if (!tarihInput.value) {
+        const bugun = new Date().toISOString().split("T")[0];
+        tarihInput.value = bugun;
+      }
+
+      // Tutar alanına görsel geri bildirim
+      const tutarInput = document.getElementById("tutar");
+      tutarInput.addEventListener("input", () => {
+        tutarInput.style.borderColor = "#198754";
+      });
+
+      // Koyu mod geçişi
+      const koyuModBtn = document.createElement("button");
+      koyuModBtn.textContent = "🌙 Koyu Mod";
+      koyuModBtn.className = "btn btn-outline-dark btn-sm d-block mx-auto mt-3";
+      document.body.appendChild(koyuModBtn);
+
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+        document.querySelector(".form-kutu").classList.toggle("bg-secondary");
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Aksu Mobil - Borç Raporu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f9f9f9;
+        padding-top: 60px;
+      }
+      .grafik {
+        display: block;
+        margin: 30px auto;
+        max-width: 600px;
+        border: 1px solid #ccc;
+        transition: transform 0.3s ease;
+      }
+      .butonlar {
+        margin-top: 20px;
+        text-align: center;
+      }
+      .butonlar a {
+        margin: 0 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="text-center mb-4">📊 Aksu Mobil - Toptancı Borç Raporu</h1>
+
+      <!-- Arama Kutusu -->
+      <input
+        type="text"
+        id="arama"
+        class="form-control mb-3"
+        placeholder="🔍 Toptancı ara..."
+      />
+
+      <!-- Tablo -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Toptancı</th>
+              <th>Borç (₺)</th>
+              <th>Ödeme (₺)</th>
+              <th>Kalan (₺)</th>
+              <th>Detay</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for id, toptanci, borc, odeme, kalan in raporlar %}
+            <tr>
+              <td>{{ toptanci }}</td>
+              <td>{{ "%.2f"|format(borc) }}</td>
+              <td>{{ "%.2f"|format(odeme) }}</td>
+              <td>{{ "%.2f"|format(kalan) }}</td>
+              <td>
+                <a href="/rapor-detay/{{ id }}" class="btn btn-sm btn-info"
+                  >Detay</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Grafik -->
+      <img
+        class="grafik"
+        id="borcGrafik"
+        src="{{ url_for('static', filename='grafikler/borc_grafigi.png') }}"
+        alt="Borç Grafiği"
+      />
+
+      <!-- Butonlar -->
+      <div class="butonlar">
+        <a href="/" class="btn btn-outline-primary">🏠 Ana Sayfa</a>
+        <a href="/rapor-pdf" id="pdfBtn" class="btn btn-outline-secondary"
+          >📄 PDF olarak indir</a
+        >
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+
+    <script>
+      // 1. Tablo filtreleme
+      const aramaKutusu = document.createElement("input");
+      aramaKutusu.placeholder = "🔍 Toptancı ara...";
+      aramaKutusu.className = "form-control my-3";
+      document.body.insertBefore(aramaKutusu, document.querySelector("table"));
+
+      aramaKutusu.addEventListener("input", () => {
+        const filtre = aramaKutusu.value.toLowerCase();
+        document.querySelectorAll("table tbody tr").forEach((satir) => {
+          const metin = satir.textContent.toLowerCase();
+          satir.style.display = metin.includes(filtre) ? "" : "none";
+        });
+      });
+
+      // 2. Grafik büyütme
+      const grafik = document.querySelector(".grafik");
+      grafik?.addEventListener("click", () => {
+        grafik.style.transform = "scale(1.2)";
+        setTimeout(() => {
+          grafik.style.transform = "scale(1)";
+        }, 1500);
+      });
+
+      // 3. PDF butonu animasyonu
+      const pdfBtn = document.querySelector('a[href="/rapor-pdf"]');
+      pdfBtn?.addEventListener("click", () => {
+        pdfBtn.textContent = "⏳ PDF hazırlanıyor...";
+        setTimeout(() => {
+          pdfBtn.textContent = "📄 PDF olarak indir";
+        }, 3000);
+      });
+
+      // 4. Koyu mod geçişi
+      const koyuModBtn = document.createElement("button");
+      koyuModBtn.textContent = "🌙 Koyu Mod";
+      koyuModBtn.className = "btn btn-outline-dark btn-sm d-block mx-auto mt-4";
+      document.body.appendChild(koyuModBtn);
+
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+      });
+
+      // 5. Canlı saat
+      const saatDiv = document.createElement("div");
+      saatDiv.className = "text-center text-muted mt-3";
+      document.body.appendChild(saatDiv);
+
+      function saatGuncelle() {
+        const simdi = new Date();
+        saatDiv.textContent = "📅 " + simdi.toLocaleString("tr-TR");
+      }
+      setInterval(saatGuncelle, 1000);
+    </script>
+  </body>
+</html>

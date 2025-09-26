@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Toptancı Düzenle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      .form-kutu {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-kutu">
+      <h2 class="text-center mb-4">✏️ Toptancı Düzenle</h2>
+
+      <form method="POST" id="toptanciForm">
+        <div class="mb-3">
+          <label for="ad" class="form-label">Ad</label>
+          <input
+            type="text"
+            class="form-control"
+            id="ad"
+            name="ad"
+            value="{{ toptanci[0] }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="telefon" class="form-label">Telefon</label>
+          <input
+            type="text"
+            class="form-control"
+            id="telefon"
+            name="telefon"
+            value="{{ toptanci[1] }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="borc" class="form-label">Borç (₺)</label>
+          <input
+            type="number"
+            step="0.01"
+            class="form-control"
+            id="borc"
+            name="borc"
+            value="{{ toptanci[2] }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="odenen" class="form-label">Ödenen (₺)</label>
+          <input
+            type="number"
+            step="0.01"
+            class="form-control"
+            id="odenen"
+            name="odenen"
+            value="{{ toptanci[3] }}"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="kalan" class="form-label">Kalan (₺)</label>
+          <input
+            type="number"
+            step="0.01"
+            class="form-control"
+            id="kalan"
+            name="kalan"
+            value="{{ toptanci[2] - toptanci[3] }}"
+            readonly
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">💾 Kaydet</button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="/toptanci-listesi" class="text-decoration-none">← Geri Dön</a>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+      const form = document.getElementById("toptanciForm");
+      const adInput = document.getElementById("ad");
+      const telInput = document.getElementById("telefon");
+      const borcInput = document.getElementById("borc");
+      const odenenInput = document.getElementById("odenen");
+      const kalanInput = document.getElementById("kalan");
+      const kaydetBtn = form.querySelector("button[type='submit']");
+
+      // Kalan otomatik hesaplama
+      function kalanHesapla() {
+        const borc = parseFloat(borcInput.value) || 0;
+        const odenen = parseFloat(odenenInput.value) || 0;
+        kalanInput.value = (borc - odenen).toFixed(2);
+      }
+
+      borcInput.addEventListener("input", kalanHesapla);
+      odenenInput.addEventListener("input", kalanHesapla);
+
+      form.addEventListener("submit", (e) => {
+        const ad = adInput.value.trim();
+        const tel = telInput.value.trim();
+
+        if (!ad || !tel) {
+          e.preventDefault();
+          alert("Lütfen tüm alanları doldurun.");
+          return;
+        }
+
+        const telRegex = /^[0-9\s()+-]{7,15}$/;
+        if (!telRegex.test(tel)) {
+          e.preventDefault();
+          alert("Geçerli bir telefon numarası girin.");
+          return;
+        }
+
+        kaydetBtn.disabled = true;
+        kaydetBtn.textContent = "⏳ Kaydediliyor...";
+      });
+
+      // Koyu mod geçişi
+      const koyuModBtn = document.createElement("button");
+      koyuModBtn.textContent = "🌙 Koyu Mod";
+      koyuModBtn.className = "btn btn-outline-dark btn-sm d-block mx-auto mt-3";
+      document.body.appendChild(koyuModBtn);
+
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+      });
+
+      // Canlı saat
+      const saatDiv = document.createElement("div");
+      saatDiv.className = "text-center text-muted mt-3";
+      document.body.appendChild(saatDiv);
+
+      function saatGuncelle() {
+        const simdi = new Date();
+        saatDiv.textContent = "📅 " + simdi.toLocaleString("tr-TR");
+      }
+      setInterval(saatGuncelle, 1000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ürün Ekle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .form-kutu {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%;
+        transition: background-color 0.3s, color 0.3s;
+      }
+      .form-kutu.dark {
+        background-color: #343a40;
+        color: #f8f9fa;
+      }
+      #saatDiv {
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-kutu" id="formKutu">
+      <h2 class="text-center mb-4">➕ Ürün Ekle</h2>
+
+      <form method="POST" id="urunForm">
+        <div class="mb-3">
+          <label for="ad" class="form-label">Ürün Adı</label>
+          <input type="text" class="form-control" name="ad" id="ad" required />
+        </div>
+
+        <div class="mb-3">
+          <label for="fiyat" class="form-label">Fiyat (₺)</label>
+          <input
+            type="number"
+            step="0.01"
+            class="form-control"
+            name="fiyat"
+            id="fiyat"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="adet" class="form-label">Adet</label>
+          <input
+            type="number"
+            class="form-control"
+            name="adet"
+            id="adet"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="toptanci_id" class="form-label">Toptancı</label>
+          <select
+            class="form-select"
+            name="toptanci_id"
+            id="toptanci_id"
+            required
+          >
+            {% for id, ad in toptancilar %}
+            <option value="{{ id }}">{{ ad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">💾 Kaydet</button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="/admin" class="text-decoration-none">← Admin Paneline Dön</a>
+      </div>
+    </div>
+
+    <!-- Koyu Mod Butonu -->
+    <button id="koyuModBtn" class="btn btn-outline-dark btn-sm mt-4">
+      🌙 Koyu Mod
+    </button>
+
+    <!-- Canlı Saat -->
+    <div id="saatDiv" class="text-center text-muted mt-2"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+      // Form doğrulama ve animasyon
+      const form = document.getElementById("urunForm");
+      const adInput = document.getElementById("ad");
+      const fiyatInput = document.getElementById("fiyat");
+      const adetInput = document.getElementById("adet");
+      const kaydetBtn = form.querySelector("button[type='submit']");
+
+      form.addEventListener("submit", (e) => {
+        const ad = adInput.value.trim();
+        const fiyat = Number(fiyatInput.value);
+        const adet = Number(adetInput.value);
+
+        if (!ad || isNaN(fiyat) || isNaN(adet)) {
+          e.preventDefault();
+          alert("Lütfen tüm alanları geçerli şekilde doldurun.");
+          return;
+        }
+
+        if (fiyat <= 0 || adet < 0) {
+          e.preventDefault();
+          alert("Fiyat pozitif, adet sıfır veya daha büyük olmalıdır.");
+          return;
+        }
+
+        kaydetBtn.disabled = true;
+        kaydetBtn.textContent = "⏳ Kaydediliyor...";
+      });
+
+      // Koyu mod geçişi
+      const koyuModBtn = document.getElementById("koyuModBtn");
+      const formKutu = document.getElementById("formKutu");
+
+      koyuModBtn.addEventListener("click", () => {
+        document.body.classList.toggle("bg-dark");
+        document.body.classList.toggle("text-light");
+        formKutu.classList.toggle("dark");
+      });
+
+      // Canlı saat
+      const saatDiv = document.getElementById("saatDiv");
+      function saatGuncelle() {
+        const simdi = new Date();
+        saatDiv.textContent = "📅 " + simdi.toLocaleString("tr-TR");
+      }
+      setInterval(saatGuncelle, 1000);
+    </script>
+  </body>
+</html>
