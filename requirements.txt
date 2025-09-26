@@ -6,3 +6,4 @@ reportlab
 openpyxl
 apscheduler
 matplotlib
+fpdf
