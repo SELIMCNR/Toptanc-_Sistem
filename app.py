@@ -1,15 +1,9 @@
-from flask import Flask, render_template, request, redirect,session
+from flask import Flask, render_template, request, redirect, session, flash
 from apscheduler.schedulers.background import BackgroundScheduler
 from yedekler.yedekleme import yedekle_veritabani
 from static.grafikler.grafik import borc_grafigi
 import sqlite3, hashlib
 from fpdf import FPDF
-from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField
-from wtforms.validators import DataRequired, NumberRange
-from flask_wtf.csrf import CSRFProtect
-
-from flask import Flask, render_template, request, redirect, session, flash
 app = Flask(__name__)
 
 app.secret_key = 'gizli-anahtar'
@@ -717,4 +711,5 @@ def cikis():
     session.clear()
     return redirect('/giris')
 if __name__ == "__main__":
+
     app.run(debug=True, host="0.0.0.0", port=5000)
