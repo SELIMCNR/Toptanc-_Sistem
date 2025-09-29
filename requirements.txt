@@ -8,3 +8,4 @@ apscheduler
 matplotlib
 fpdf
 flask-wtf
+bcrypt
