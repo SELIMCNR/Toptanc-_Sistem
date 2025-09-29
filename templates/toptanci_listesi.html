@@ -51,27 +51,42 @@
             </tr>
           </thead>
           <tbody>
-            {% for id, ad, telefon, borc, odenen, kalan in toptancilar %}
+            {% if toptancilar %} {% for id, ad, telefon, borc, odenen, kalan in
+            toptancilar %}
             <tr>
               <td>{{ id }}</td>
               <td>{{ ad }}</td>
               <td>{{ telefon }}</td>
-              <td>{{ "%.2f"|format(borc) }}</td>
-              <td>{{ "%.2f"|format(odenen) }}</td>
-              <td>{{ "%.2f"|format(borc - odenen) }}</td>
+              <td>{{ "%.2f"|format(borc|float) }}</td>
+              <td>{{ "%.2f"|format(odenen|float) }}</td>
+              <td>{{ "%.2f"|format(kalan|float) }}</td>
               <td>
                 <a href="/toptanci-duzenle/{{ id }}" class="btn btn-sm btn-info"
                   >✏️ Düzenle</a
                 >
-                <a
-                  href="/toptanci-sil/{{ id }}"
-                  class="btn btn-sm btn-danger"
-                  onclick="return confirm('Silmek istediğine emin misin?')"
-                  >🗑️ Sil</a
+                <form
+                  action="/toptanci-sil"
+                  method="POST"
+                  style="display: inline"
                 >
+                  <input type="hidden" name="id" value="{{ id }}" />
+                  <button
+                    type="submit"
+                    onclick="return confirm('Silmek istediğinize emin misiniz?')"
+                    class="btn btn-danger btn-sm"
+                  >
+                    Sil
+                  </button>
+                </form>
               </td>
             </tr>
-            {% endfor %}
+            print(f"Silme isteği alındı: ID={id}") {% endfor %} {% else %}
+            <tr>
+              <td colspan="7" class="text-center text-muted">
+                Hiç toptancı bulunamadı.
+              </td>
+            </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
@@ -101,7 +116,7 @@
 
     <!-- JavaScript -->
     <script>
-      // 1. Arama kutusuyla filtreleme
+      // 1. Arama kutusuyla filtreleme (istemci tarafı)
       const aramaKutusu = document.getElementById("aramaKutusu");
       aramaKutusu?.addEventListener("input", () => {
         const filtre = aramaKutusu.value.toLowerCase();
@@ -111,14 +126,7 @@
         });
       });
 
-      // 2. İşlem butonlarına animasyon
-      document.querySelectorAll("a.btn-info, a.btn-danger").forEach((buton) => {
-        buton.addEventListener("click", () => {
-          buton.textContent = "⏳ İşleniyor...";
-        });
-      });
-
-      // 3. Koyu mod geçişi
+      // 2. Koyu mod geçişi
       const koyuModBtn = document.getElementById("koyuModBtn");
       koyuModBtn.addEventListener("click", () => {
         document.body.classList.toggle("bg-dark");
@@ -128,7 +136,7 @@
         });
       });
 
-      // 4. Canlı saat
+      // 3. Canlı saat
       const saatDiv = document.getElementById("saatDiv");
       function saatGuncelle() {
         const simdi = new Date();

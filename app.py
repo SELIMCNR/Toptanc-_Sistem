@@ -1,9 +1,15 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect,session
 from apscheduler.schedulers.background import BackgroundScheduler
 from yedekler.yedekleme import yedekle_veritabani
 from static.grafikler.grafik import borc_grafigi
 import sqlite3, hashlib
 from fpdf import FPDF
+from flask_wtf import FlaskForm
+from wtforms import StringField, FloatField
+from wtforms.validators import DataRequired, NumberRange
+from flask_wtf.csrf import CSRFProtect
+
+from flask import Flask, render_template, request, redirect, session, flash
 app = Flask(__name__)
 
 app.secret_key = 'gizli-anahtar'
@@ -112,45 +118,106 @@ def toptanci_listesi():
         return redirect('/giris')
 
     arama = request.args.get('arama', '')
-    conn = sqlite3.connect("veritabani.db")
-    cursor = conn.cursor()
-
-    if arama:
-        cursor.execute("""
-            SELECT id, ad, telefon, borc, odenen, (borc - odenen) AS kalan
-            FROM toptancilar
-            WHERE ad LIKE ?
-        """, ('%' + arama + '%',))
-    else:
-        cursor.execute("""
-            SELECT id, ad, telefon, borc, odenen, (borc - odenen) AS kalan
-            FROM toptancilar
-        """)
-    toptancilar = cursor.fetchall()
-    conn.close()
+    with sqlite3.connect("veritabani.db") as conn:
+        cursor = conn.cursor()
+        if arama:
+            cursor.execute("""
+                SELECT id, ad, telefon, borc, odenen, (borc - odenen) AS kalan
+                FROM toptancilar
+                WHERE ad LIKE ?
+            """, ('%' + arama + '%',))
+        else:
+            cursor.execute("""
+                SELECT id, ad, telefon, borc, odenen, (borc - odenen) AS kalan
+                FROM toptancilar
+            """)
+        toptancilar = cursor.fetchall()
 
     return render_template("toptanci_listesi.html", toptancilar=toptancilar, arama=arama)
 
-@app.route('/toptanci-sil/<int:id>')
-def toptanci_sil(id):
-    try:
-        conn = sqlite3.connect("veritabani.db")
-        cursor = conn.cursor()
 
-        # İlişkili ödeme kontrolü (örnek tablo: odemeler)
-        cursor.execute("SELECT COUNT(*) FROM odemeler WHERE toptanci_id=?", (id,))
-        sayi = cursor.fetchone()[0]
-        if sayi > 0:
-            flash("Bu toptancıya ait ödeme kayıtları var. Önce onları silin.", "warning")
+@app.route('/toptanci-sil', methods=['POST'])
+def toptanci_sil():
+    if 'kullanici' not in session:
+        return redirect('/giris')
+
+    try:
+        id = int(request.form.get('id', 0))
+        if id <= 0:
+            flash("Geçersiz toptancı ID", "danger")
             return redirect('/toptanci-listesi')
 
-        cursor.execute("DELETE FROM toptancilar WHERE id=?", (id,))
-        conn.commit()
-        conn.close()
-        flash("Toptancı silindi", "success")
+        with sqlite3.connect("veritabani.db") as conn:
+            cursor = conn.cursor()
+
+            # Ödeme kontrolü
+            cursor.execute("SELECT COUNT(*) FROM odemeler WHERE toptanci_id=?", (id,))
+            sayi = cursor.fetchone()[0]
+            if sayi > 0:
+                flash("Bu toptancıya ait ödeme kayıtları var. Önce onları silin.", "warning")
+                return redirect('/toptanci-listesi')
+
+            # Silme işlemi
+            cursor.execute("DELETE FROM toptancilar WHERE id=?", (id,))
+            silinen = cursor.rowcount
+            conn.commit()
+
+            if silinen == 0:
+                flash("Silme başarısız: Toptancı bulunamadı.", "danger")
+            else:
+                flash("Toptancı başarıyla silindi.", "success")
+
+    except ValueError:
+        flash("Geçersiz ID formatı.", "danger")
     except Exception as e:
         flash(f"Hata oluştu: {str(e)}", "danger")
+
     return redirect('/toptanci-listesi')
+
+@app.route('/toptanci-duzenle/<int:id>', methods=['GET', 'POST'])
+def toptanci_duzenle(id):
+    if 'kullanici' not in session:
+        return redirect('/giris')
+
+    try:
+        with sqlite3.connect("veritabani.db") as conn:
+            cursor = conn.cursor()
+
+            if request.method == 'POST':
+                ad = request.form.get('ad', '').strip()
+                telefon = request.form.get('telefon', '').strip()
+                borc = float(request.form.get('borc', '0').replace(',', '.'))
+                odenen = float(request.form.get('odenen', '0').replace(',', '.'))
+
+                cursor.execute("""
+                    UPDATE toptancilar
+                    SET ad = ?, telefon = ?, borc = ?, odenen = ?
+                    WHERE id = ?
+                """, (ad, telefon, borc, odenen, id))
+                conn.commit()
+                flash("Toptancı bilgileri güncellendi", "success")
+                return redirect('/toptanci-listesi')
+
+            cursor.execute("SELECT id, ad, telefon, borc, odenen FROM toptancilar WHERE id = ?", (id,))
+            toptanci = cursor.fetchone()
+
+            if not toptanci:
+                flash("Toptancı bulunamadı", "danger")
+                return redirect('/toptanci-listesi')
+
+            borc = float(toptanci[3])
+            odenen = float(toptanci[4])
+            kalan = borc - odenen
+            return render_template("toptanci_duzenle.html", toptanci=toptanci, kalan=kalan)
+
+    except ValueError:
+        flash("Borç ve ödenen alanlarına geçerli sayısal değer girin.", "danger")
+        return redirect(f"/toptanci-duzenle/{id}")
+
+    except Exception as e:
+        flash(f"Hata oluştu: {str(e)}", "danger")
+        return redirect('/toptanci-listesi')
+
 @app.route('/rapor')
 def rapor():
     if 'kullanici' not in session:
@@ -448,39 +515,42 @@ def urun_sil(id):
     conn.commit()
     conn.close()
     return redirect('/urun-listesi')
-
 @app.route('/toptanci-ekle', methods=['GET', 'POST'])
 def toptanci_ekle():
+    if 'kullanici' not in session:
+        return redirect('/giris')
+
     if request.method == 'POST':
         try:
-            ad = request.form['ad'].strip()
-            telefon = request.form['telefon'].strip()
-            borc = float(request.form['borc'])
-            odenen = float(request.form['odenen'])
+            ad = request.form.get('ad', '').strip()
+            telefon = request.form.get('telefon', '').strip()
+            borc = float(request.form.get('borc', '0').replace(',', '.'))
+            odenen = float(request.form.get('odenen', '0').replace(',', '.'))
+            kalan = borc - odenen
 
             if not ad or not telefon:
-                flash("Ad ve telefon boş olamaz", "danger")
+                flash("Ad ve telefon alanları zorunludur.", "danger")
                 return redirect('/toptanci-ekle')
 
-            if odenen > borc:
-                flash("Ödenen borcu aşamaz", "danger")
-                return redirect('/toptanci-ekle')
+            with sqlite3.connect("veritabani.db") as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO toptancilar (ad, telefon, borc, odenen, kalan)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (ad, telefon, borc, odenen, kalan))
+                conn.commit()
 
-            conn = sqlite3.connect("veritabani.db")
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO toptancilar (ad, telefon, borc, odenen) VALUES (?, ?, ?, ?)",
-                           (ad, telefon, borc, odenen))
-            conn.commit()
-            conn.close()
-
-            flash("Toptancı başarıyla eklendi", "success")
+            flash("Yeni toptancı başarıyla eklendi.", "success")
             return redirect('/toptanci-listesi')
 
+        except ValueError:
+            flash("Borç ve ödenen alanlarına geçerli sayısal değer girin.", "danger")
         except Exception as e:
             flash(f"Hata oluştu: {str(e)}", "danger")
-            return redirect('/toptanci-ekle')
 
     return render_template("toptanci_ekle.html")
+
+
 @app.route('/odeme-ekle', methods=['GET', 'POST'])
 def odeme_ekle():
     if 'kullanici' not in session:
@@ -711,5 +781,4 @@ def cikis():
     session.clear()
     return redirect('/giris')
 if __name__ == "__main__":
-
     app.run(debug=True, host="0.0.0.0", port=5000)
